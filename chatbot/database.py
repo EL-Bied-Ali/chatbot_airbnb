@@ -1,4 +1,6 @@
 import sqlite3  # Importing SQLite library to handle database operations
+from fuzzywuzzy import process
+
 
 # Function to initialize the database and create the 'faq' table if it doesn't exist
 def init_db():
@@ -38,21 +40,33 @@ def add_faq(question, answer, keywords):
     conn.close()
     print("FAQ entry added successfully.")
 
-# Function to fetch an answer based on keywords provided by the user
+# Function to fetch an answer based on keywords provided by the user with fallback mechanism
 def get_answer_by_keyword(keyword):
-    # Connect to the database
     conn = sqlite3.connect('chatbot_airbnb.db')
     cursor = conn.cursor()
 
-    # SQL query to search for an answer using a keyword (case insensitive)
-    cursor.execute('SELECT answer FROM faq WHERE keywords LIKE ?', ('%' + keyword.lower() + '%',))
-    result = cursor.fetchone()  # Fetch the first matching row
+    # Search for exact keyword match
+    cursor.execute("SELECT answer FROM faq WHERE keywords LIKE ?", ('%' + keyword.lower() + '%',))
+    result = cursor.fetchone()
 
-    # Close the connection
+    if result:
+        conn.close()
+        return result[0]
+
+    # If no exact match, look for similar keywords
+    cursor.execute("SELECT keywords FROM faq")
+    keywords_list = [row[0] for row in cursor.fetchall()]
+    
+    if keywords_list:
+        closest_match, score = process.extractOne(keyword, keywords_list)
+
+        # If similarity is above threshold, suggest similar question
+        if score > 60:
+            conn.close()
+            return f"Did you mean: {closest_match}? Please try again."
+
     conn.close()
-
-    # Return the found answer or a default response if no match is found
-    return result[0] if result else "Sorry, I don't have an answer for that."
+    return "Sorry, I don't have an answer to that. Please contact support for more details."
 
 # Entry point to initialize the database when this script is run directly
 if __name__ == "__main__":
