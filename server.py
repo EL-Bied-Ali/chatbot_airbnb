@@ -24,16 +24,16 @@ def send_push_notification(guest, message, ai_response, airbnb_link):
     edit_url = f"https://airbnb-bot.onrender.com/edit_response?response={encoded_ai_response}&thread={airbnb_link}"
 
     push_data = {
-        "type": "link",
+        "type": "note",
         "title": f"New Airbnb Message from {guest}!",
         "body": (
             f"📩 Message: {message}\n"
             f"🤖 AI Response: {ai_response}\n\n"
-            f"✅ <a href='{approve_url}'>Approve & Send</a>\n"
-            f"📝 <a href='{edit_url}'>Edit & Send</a>"
-        ),
-        "url": airbnb_link  # This will open the Airbnb conversation by default
+            f"✅ Approve & Send: {approve_url}\n"
+            f"📝 Edit & Send: {edit_url}"
+        )
     }
+
 
     headers = {"Access-Token": PUSHBULLET_API_KEY, "Content-Type": "application/json"}
     
@@ -103,6 +103,31 @@ def fetch_messages():
         return jsonify({"status": "No new Airbnb messages found"}), 200
 
     return jsonify(messages), 200
+    
+@app.route('/edit_response', methods=['GET', 'POST'])
+def edit_response():
+    """ Allows the user to edit the AI response before sending """
+    if request.method == 'GET':
+        ai_response = request.args.get("response", "")
+        airbnb_link = request.args.get("thread", "#")
+
+        return render_template("edit_form.html", ai_response=ai_response, airbnb_link=airbnb_link)
+
+    if request.method == 'POST':
+        edited_response = request.form["edited_response"]
+        new_info = request.form.get("new_info", "")
+        airbnb_link = request.form["airbnb_link"]
+
+        # Store new info in the database (for AI training)
+        if new_info:
+            with open("apartment_updates.txt", "a") as file:
+                file.write(f"{new_info}\n")
+
+        print(f"✅ Sending edited response: {edited_response}")
+        print(f"🔗 Airbnb Thread: {airbnb_link}")
+
+        return "✅ Message sent with edits!", 200
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
