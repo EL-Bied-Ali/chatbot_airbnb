@@ -39,5 +39,15 @@ def gmail_trigger():
         "ai_response": response_text
     }), 200
 
+@app.route('/messages', methods=['GET'])
+def fetch_messages():
+    """Fetches Airbnb messages (For testing API)"""
+    messages = get_latest_airbnb_messages()
+    
+    if not messages:
+        return jsonify({"status": "No new Airbnb messages found"}), 200
+
+    return jsonify(messages), 200
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
