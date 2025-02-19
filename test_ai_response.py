@@ -7,39 +7,39 @@ API_KEY = os.getenv("TOGETHER_AI_KEY")
 
 API_URL = "https://api.together.xyz/v1/completions"
 
-# 🔹 Base de données des appartements
+# 🔹 Database of apartment details
 APPARTEMENTS = {
     "Bayside Luxe 2BR | Marina Dubai": {
-        "transport": "À 5 minutes à pied de la station de métro et de plusieurs lignes de bus.",
-        "insonorisation": "Isolation renforcée avec double vitrage.",
-        "vue": "Vue panoramique sur la mer depuis le salon et le balcon.",
-        "équipements": "Piscine, salle de sport, Wi-Fi rapide, cuisine équipée.",
-        "règlement": "Interdiction de fumer, pas d'animaux, check-in entre 15h et 22h.",
-        "sécurité": "Concierge 24h/24 et accès sécurisé avec code."
+        "transport": "5-minute walk to the metro station and multiple bus lines.",
+        "soundproofing": "Enhanced insulation with double-glazed windows.",
+        "view": "Panoramic sea view from the living room and balcony.",
+        "amenities": "Swimming pool, gym, high-speed Wi-Fi, fully equipped kitchen.",
+        "rules": "No smoking, no pets, check-in between 3 PM and 10 PM.",
+        "security": "24/7 concierge and secure access with code."
     }
 }
 
 def generate_response(client_message, appartement_nom):
-    """ Génère une réponse IA en tenant compte des infos spécifiques de l'appartement si c'est pertinent """
+    """ Generates an AI response considering the apartment's details if relevant """
     headers = {"Authorization": f"Bearer {API_KEY}", "Content-Type": "application/json"}
 
-    # 🔹 On récupère les infos de l'appartement
+    # 🔹 Fetch apartment details
     appartement_info = APPARTEMENTS.get(appartement_nom, {})
     details = "\n".join([f"{key}: {value}" for key, value in appartement_info.items()])
 
-    # 📝 Prompt optimisé
-    prompt = f"""Tu es un hôte Airbnb expérimenté.
-    Réponds de manière professionnelle et amicale aux questions des clients.
-    
-    📍 Appartement : {appartement_nom}
+    # 📝 Optimized Prompt in English
+    prompt = f"""You are a professional Airbnb host. 
+    Respond in a polite and friendly manner to guest inquiries.
 
-    ✅ Si la question du client concerne les détails de l'appartement, utilise ces informations :
+    📍 Apartment: {appartement_nom}
+
+    ✅ If the guest's question is related to the apartment, use the following information:
     {details}
 
-    ❌ Si la question n'a rien à voir avec l'appartement, ignore les informations ci-dessus et réponds normalement.
+    ❌ If the question is unrelated to the apartment, ignore the above details and provide a general response.
 
-    Client : "{client_message}"
-    Hôte : """
+    Guest: "{client_message}"
+    Host:"""
 
     data = {
         "model": "mistralai/Mistral-7B-Instruct-v0.1",
@@ -47,7 +47,7 @@ def generate_response(client_message, appartement_nom):
         "max_tokens": 150,
         "temperature": 0.5,
         "top_p": 0.9,
-        "stop": ["Client :"]
+        "stop": ["Guest:"]
     }
 
     response = requests.post(API_URL, headers=headers, json=data)
@@ -56,20 +56,20 @@ def generate_response(client_message, appartement_nom):
     if "choices" in response_data and len(response_data["choices"]) > 0:
         return response_data["choices"][0]["text"].strip()
     else:
-        return f"❌ Erreur: {response_data}"
+        return f"❌ Error: {response_data}"
 
-# 🔹 Test avec un exemple de question hors sujet
+# 🔹 Test with different guest questions
 if __name__ == "__main__":
     questions = [
-        "L'appartement est-il proche des transports en commun ?",  # Doit répondre avec les infos du logement
-        "Que penses-tu du climat à Dubaï ?",  # Doit ignorer les infos et répondre normalement
-        "Quels sont les équipements de l'appartement ?",  # Doit utiliser les infos
-        "As-tu des recommandations de restaurants ?"  # Doit ignorer les infos et répondre normalement
+        "Is the apartment close to public transport?",  # Should respond with relevant details
+        "What do you think about the weather in Dubai?",  # Should ignore apartment details
+        "What amenities does the apartment offer?",  # Should list apartment features
+        "Can you recommend any good restaurants nearby?"  # Should ignore apartment details
     ]
 
     appartement_nom = "Bayside Luxe 2BR | Marina Dubai"
 
     for question in questions:
-        print(f"\n📩 **Question du client :** {question}")
+        print(f"\n📩 **Guest Question:** {question}")
         response = generate_response(question, appartement_nom)
-        print(f"🤖 **Réponse de l'IA :** {response}")
+        print(f"🤖 **AI Response:** {response}")
