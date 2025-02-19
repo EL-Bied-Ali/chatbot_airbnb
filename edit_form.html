@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Edit Response</title>
+</head>
+<body>
+    <h2>Edit Your Airbnb Response</h2>
+    <form method="POST">
+        <label for="edited_response">AI-Generated Response:</label><br>
+        <textarea id="edited_response" name="edited_response" rows="5" cols="50">{{ ai_response }}</textarea><br><br>
+
+        <label for="new_info">New Apartment Information (optional):</label><br>
+        <textarea id="new_info" name="new_info" rows="3" cols="50"></textarea><br><br>
+
+        <input type="hidden" name="airbnb_link" value="{{ airbnb_link }}">
+
+        <button type="submit">Send Response</button>
+    </form>
+</body>
+</html>
