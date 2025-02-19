@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template/
+from flask import Flask, request, jsonify, render_template
 import os
 import requests
 from parse_airbnb_email import get_latest_airbnb_messages
