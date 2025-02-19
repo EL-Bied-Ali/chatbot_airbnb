@@ -1,14 +1,38 @@
 from flask import Flask, request, jsonify
-import json
+import os
+import requests
 from parse_airbnb_email import get_latest_airbnb_messages
 from test_ai_response import generate_response
 
+# Load Pushbullet API key from Render environment variables
+PUSHBULLET_API_KEY = os.getenv("PUSHBULLET_API_KEY")
+
 app = Flask(__name__)
+
+def send_push_notification(guest, message, ai_response, airbnb_link):
+    """ Sends a Pushbullet notification with AI-generated response """
+    if not PUSHBULLET_API_KEY:
+        print("❌ Pushbullet API Key is missing. Skipping notification.")
+        return
+
+    push_data = {
+        "type": "note",
+        "title": f"New Airbnb Message from {guest}!",
+        "body": f"📩 Message: {message}\n🤖 AI Response: {ai_response}\n🔗 [View Conversation]({airbnb_link})",
+    }
+    headers = {"Access-Token": PUSHBULLET_API_KEY, "Content-Type": "application/json"}
+    
+    response = requests.post("https://api.pushbullet.com/v2/pushes", json=push_data, headers=headers)
+    
+    if response.status_code == 200:
+        print("✅ Push notification sent successfully!")
+    else:
+        print(f"❌ Failed to send notification: {response.text}")
 
 @app.route('/gmail_trigger', methods=['POST'])
 def gmail_trigger():
-    """ Traite le dernier email reçu et génère une réponse IA """
-    print("🔔 Nouvelle notification Gmail reçue...")
+    """ Fetches new Airbnb messages and sends Push Notification """
+    print("🔔 Checking for new Airbnb messages...")
 
     messages = get_latest_airbnb_messages()
     
@@ -16,27 +40,26 @@ def gmail_trigger():
         return jsonify({"status": "Aucun nouvel email trouvé"}), 200
 
     latest_message = messages[0]
-    client_message = latest_message["message"]
     guest_name = latest_message["guest_name"]
+    client_message = latest_message["message"]
     listing_name = latest_message["listing_name"]
+    airbnb_link = latest_message.get("airbnb_link", "#")
 
-    print("\n📩 **Nouveau message Airbnb**")
-    print(f"👤 De : {guest_name}")
-    print(f"🏡 Appartement : {listing_name}")
-    print(f"💬 Message : {client_message}")
+    print(f"\n📩 **New Airbnb Message from {guest_name}**")
+    print(f"💬 Message: {client_message}")
 
-    # Générer une réponse IA basée sur l'appartement
-    response_text = generate_response(client_message, listing_name)
-    
-    print("\n🤖 **Réponse générée par l'IA**")
-    print(response_text)
+    # 🔹 Generate AI Response
+    ai_response = generate_response(client_message, listing_name)
+
+    # 🔹 Send Push Notification
+    send_push_notification(guest_name, client_message, ai_response, airbnb_link)
 
     return jsonify({
         "status": "Réponse générée",
         "guest": guest_name,
         "client_message": client_message,
         "apartment": listing_name,
-        "ai_response": response_text
+        "ai_response": ai_response
     }), 200
 
 @app.route('/messages', methods=['GET'])
