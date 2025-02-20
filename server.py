@@ -144,8 +144,14 @@ def prefill_message():
     except Exception as e:
         print(f"❌ Clipboard copy failed: {e}")
 
-    # Redirect the user to Airbnb chat
+    # Convert the web link to an Airbnb deep link
+    if "airbnb.com/messaging/thread" in airbnb_link:
+        airbnb_link = airbnb_link.replace("https://www.airbnb.com", "airbnb://")
+        airbnb_link = airbnb_link.replace("https://fr.airbnb.com", "airbnb://")  # Support Airbnb France
+        airbnb_link = airbnb_link.replace("https://airbnb.com", "airbnb://")  # General case
+
     return redirect(airbnb_link)
+
 
 
 if __name__ == '__main__':
