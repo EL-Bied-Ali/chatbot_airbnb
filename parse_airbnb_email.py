@@ -109,28 +109,38 @@ def extract_airbnb_details(email_html):
     reservation_dates = reservation_dates if reservation_dates else "Non spécifié"
     message = message if message else "Aucun message trouvé"
     
-    # 🔹 Extraction du lien contenu dans "Répondre"
+    # 🔹 Extraction du lien contenant l'ID de la discussion Airbnb
     airbnb_link = None
-    reply_button = soup.find("a", string=re.compile(r"Répondre", re.IGNORECASE))  # Trouver le bouton Répondre
+    reply_button = soup.find("a", href=re.compile(r"messaging/thread/\d+"))  # Assurez-vous qu'il s'agit du bon lien
     if reply_button and reply_button.has_attr("href"):
         airbnb_link = reply_button["href"]
 
-    # 🔹 Extraction de l'ID de la conversation Airbnb
+    # Nettoyage du lien pour éviter les paramètres supplémentaires
+    if airbnb_link:
+        match = re.search(r"(https?://[a-z]+\.airbnb\.[a-z]+/messaging/thread/\d+)", airbnb_link)
+        if match:
+            airbnb_link = match.group(1)  # Keep only the clean URL before any parameters
+        else:
+            airbnb_link = None  # Fallback if regex fails
+
+    # 🔹 Conversion en lien profond Airbnb
     airbnb_thread_id = None
     if airbnb_link:
         thread_match = re.search(r"thread/(\d+)", airbnb_link)
         if thread_match:
             airbnb_thread_id = thread_match.group(1)
+            airbnb_link = f"airbnb://messaging/thread/{airbnb_thread_id}"  # Convert to deep link format
+        else:
+            airbnb_link = None  # Fallback if extraction fails
 
     return {
         "guest_name": guest_name,
         "listing_name": listing_name,
         "reservation_dates": reservation_dates,
         "message": message,
-        "airbnb_link": airbnb_link,  # 🔹 Lien direct vers la conversation
-        "airbnb_thread_id": airbnb_thread_id  # 🔹 ID unique de la discussion Airbnb
+        "airbnb_link": airbnb_link,  # 🔹 Correct Airbnb deep link
+        "airbnb_thread_id": airbnb_thread_id  # 🔹 Thread ID for reference
     }
-
 
 
 if __name__ == "__main__":
@@ -143,5 +153,3 @@ if __name__ == "__main__":
         print(f"💬 Message: {msg['message']}")
         print(f"🔗 Lien vers la conversation Airbnb: {msg.get('airbnb_link', '❌ Aucun lien trouvé')}")
         print(f"🆔 ID de la discussion Airbnb: {msg.get('airbnb_thread_id', '❌ Aucun ID trouvé')}")
-
-

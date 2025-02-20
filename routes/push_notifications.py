@@ -2,6 +2,7 @@ from flask import Blueprint
 import os
 import requests
 import urllib.parse
+import re
 
 push_blueprint = Blueprint('push', __name__)
 
@@ -14,8 +15,17 @@ def send_push_notification(guest, message, ai_response, airbnb_link):
         return
 
     encoded_ai_response = urllib.parse.quote(ai_response)
-    approve_url = f"https://airbnb-bot.onrender.com/prefill_message?response={encoded_ai_response}&thread={airbnb_link}"
-    edit_url = f"https://airbnb-bot.onrender.com/edit_response?response={encoded_ai_response}&thread={airbnb_link}"
+
+    # 🔹 Extract the Airbnb thread ID properly
+    thread_match = re.search(r"thread/(\d+)", airbnb_link)
+    if thread_match:
+        thread_id = thread_match.group(1)
+        airbnb_app_link = f"airbnb://messaging/thread/{thread_id}"  # ✅ Correct deep link format
+    else:
+        airbnb_app_link = airbnb_link  # Fallback if extraction fails
+
+    approve_url = f"https://airbnb-bot.onrender.com/prefill_message?response={encoded_ai_response}&thread={airbnb_app_link}"
+    edit_url = f"https://airbnb-bot.onrender.com/edit_response?response={encoded_ai_response}&thread={airbnb_app_link}"
 
     push_data = {
         "type": "note",
@@ -29,9 +39,9 @@ def send_push_notification(guest, message, ai_response, airbnb_link):
     }
 
     headers = {"Access-Token": PUSHBULLET_API_KEY, "Content-Type": "application/json"}
-    
+
     response = requests.post("https://api.pushbullet.com/v2/pushes", json=push_data, headers=headers)
-    
+
     if response.status_code == 200:
         print("✅ Push notification sent successfully!")
     else:
