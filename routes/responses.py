@@ -1,5 +1,6 @@
 from flask import Blueprint, request, render_template, redirect, render_template_string
 import pyperclip
+import re  # Import regex for extracting thread ID
 
 responses_blueprint = Blueprint('responses', __name__)
 
@@ -40,11 +41,11 @@ def prefill_message():
     except Exception as e:
         print(f"❌ Clipboard copy failed: {e}")
 
-    # Ensure Airbnb link uses deep linking format for mobile
-    # Ensure it always uses the web version
-    if "airbnb.com/messaging/thread" in airbnb_link:
-        airbnb_link = airbnb_link.replace("airbnb://", "https://www.airbnb.com")
-
+    # Ensure Airbnb link uses the correct messaging format
+    match = re.search(r'(\d{9,})', airbnb_link)  # Extracts the thread ID (at least 9 digits)
+    if match:
+        thread_id = match.group(1)
+        airbnb_link = f"https://www.airbnb.com/messaging/thread/{thread_id}"
 
     return render_template_string(f"""
         <!DOCTYPE html>
@@ -57,8 +58,7 @@ def prefill_message():
             <p>Your AI-generated message has been copied. Click below to open the Airbnb chat:</p>
             <a href="{airbnb_link}" target="_blank" style="font-size:20px; padding:10px; background-color:#007AFF; color:white; text-decoration:none;">Open in Browser</a>
             <br><br>
-            <a href="airbnb://messaging/thread" style="font-size:20px; padding:10px; background-color:#34A853; color:white; text-decoration:none;">Open in App (Mobile Only)</a>
+            <a href="airbnb://messaging/thread/{thread_id}" style="font-size:20px; padding:10px; background-color:#34A853; color:white; text-decoration:none;">Open in App (Mobile Only)</a>
         </body>
         </html>
     """)
-
