@@ -1,4 +1,4 @@
-from flask import Blueprint, request, render_template, redirect
+from flask import Blueprint, request, render_template, redirect, render_template_string
 import pyperclip
 
 responses_blueprint = Blueprint('responses', __name__)
@@ -34,14 +34,29 @@ def prefill_message():
     if not ai_response or not airbnb_link:
         return "❌ Invalid request.", 400
 
+    # Copy the response to clipboard (works on desktop)
     try:
         pyperclip.copy(ai_response)
     except Exception as e:
         print(f"❌ Clipboard copy failed: {e}")
 
+    # Ensure Airbnb link uses deep linking format for mobile
     if "airbnb.com/messaging/thread" in airbnb_link:
         airbnb_link = airbnb_link.replace("https://www.airbnb.com", "airbnb://")
         airbnb_link = airbnb_link.replace("https://fr.airbnb.com", "airbnb://")
         airbnb_link = airbnb_link.replace("https://airbnb.com", "airbnb://")
 
-    return redirect(airbnb_link)
+    # Return a page with a clickable link
+    return render_template_string(f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Open Airbnb Chat</title>
+        </head>
+        <body>
+            <h2>Message Copied! Open Airbnb to Send</h2>
+            <p>Your AI-generated message has been copied. Click below to open the Airbnb chat:</p>
+            <a href="{airbnb_link}" style="font-size:20px; padding:10px; background-color:#007AFF; color:white; text-decoration:none;">Open Airbnb Chat</a>
+        </body>
+        </html>
+    """)
