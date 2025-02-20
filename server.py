@@ -1,8 +1,9 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, redirect
 import os
 import requests
 from parse_airbnb_email import get_latest_airbnb_messages
 from test_ai_response import generate_response
+import pyperclip
 
 # Load Pushbullet API key from Render environment variables
 PUSHBULLET_API_KEY = os.getenv("PUSHBULLET_API_KEY")
@@ -20,7 +21,7 @@ def send_push_notification(guest, message, ai_response, airbnb_link):
     encoded_ai_response = urllib.parse.quote(ai_response)
 
     # URLs for direct approval and manual edit
-    approve_url = f"https://airbnb-bot.onrender.com/send_message?response={encoded_ai_response}&thread={airbnb_link}"
+    approve_url = f"https://airbnb-bot.onrender.com/prefill_message?response={encoded_ai_response}&thread={airbnb_link}"
     edit_url = f"https://airbnb-bot.onrender.com/edit_response?response={encoded_ai_response}&thread={airbnb_link}"
 
     push_data = {
@@ -127,6 +128,24 @@ def edit_response():
         print(f"🔗 Airbnb Thread: {airbnb_link}")
 
         return "✅ Message sent with edits!", 200
+
+@app.route('/prefill_message', methods=['GET'])
+def prefill_message():
+    """ Opens Airbnb chat and copies the AI response to clipboard for easy pasting """
+    ai_response = request.args.get("response", "")
+    airbnb_link = request.args.get("thread", "#")
+
+    if not ai_response or not airbnb_link:
+        return "❌ Invalid request.", 400
+
+    # Copy the response to clipboard (only works on desktop)
+    try:
+        pyperclip.copy(ai_response)
+    except Exception as e:
+        print(f"❌ Clipboard copy failed: {e}")
+
+    # Redirect the user to Airbnb chat
+    return redirect(airbnb_link)
 
 
 if __name__ == '__main__':
