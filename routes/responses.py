@@ -41,12 +41,11 @@ def prefill_message():
         print(f"❌ Clipboard copy failed: {e}")
 
     # Ensure Airbnb link uses deep linking format for mobile
+    # Ensure it always uses the web version
     if "airbnb.com/messaging/thread" in airbnb_link:
-        airbnb_link = airbnb_link.replace("https://www.airbnb.com", "airbnb://")
-        airbnb_link = airbnb_link.replace("https://fr.airbnb.com", "airbnb://")
-        airbnb_link = airbnb_link.replace("https://airbnb.com", "airbnb://")
+        airbnb_link = airbnb_link.replace("airbnb://", "https://www.airbnb.com")
 
-    # Return a page with a clickable link
+
     return render_template_string(f"""
         <!DOCTYPE html>
         <html>
@@ -56,7 +55,10 @@ def prefill_message():
         <body>
             <h2>Message Copied! Open Airbnb to Send</h2>
             <p>Your AI-generated message has been copied. Click below to open the Airbnb chat:</p>
-            <a href="{airbnb_link}" style="font-size:20px; padding:10px; background-color:#007AFF; color:white; text-decoration:none;">Open Airbnb Chat</a>
+            <a href="{airbnb_link}" target="_blank" style="font-size:20px; padding:10px; background-color:#007AFF; color:white; text-decoration:none;">Open in Browser</a>
+            <br><br>
+            <a href="airbnb://messaging/thread" style="font-size:20px; padding:10px; background-color:#34A853; color:white; text-decoration:none;">Open in App (Mobile Only)</a>
         </body>
         </html>
     """)
+
