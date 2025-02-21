@@ -123,15 +123,17 @@ def extract_airbnb_details(email_html):
         else:
             airbnb_link = None  # Fallback if regex fails
 
-    # 🔹 Conversion en lien profond Airbnb
+    # 🔹 Keep the full Airbnb web link (if present)
     airbnb_thread_id = None
     if airbnb_link:
         thread_match = re.search(r"thread/(\d+)", airbnb_link)
         if thread_match:
             airbnb_thread_id = thread_match.group(1)
-            airbnb_link = f"airbnb://messaging/thread/{airbnb_thread_id}"  # Convert to deep link format
+            # ✅ Instead of converting to `airbnb://`, keep the original web link
+            airbnb_link = f"https://fr.airbnb.be/messaging/thread/{airbnb_thread_id}?thread_type=home_booking&c=.pi80.pkaG9tZXNfbWVzc2FnaW5nL25ld19tZXNzYWdl&euid=819f8882-a06d-f4a6-da35-6b3b6f87be81"
         else:
             airbnb_link = None  # Fallback if extraction fails
+
 
     return {
         "guest_name": guest_name,
