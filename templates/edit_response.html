@@ -3,25 +3,38 @@
 <head>
     <title>Edit Airbnb Response</title>
     <style>
-        body {{
+        body {
             font-family: Arial, sans-serif;
             margin: 40px;
             padding: 20px;
-        }}
-        textarea {{
+        }
+        textarea {
             width: 100%;
             padding: 10px;
             font-size: 14px;
-        }}
-        button {{
+        }
+        button {
             padding: 10px 20px;
             font-size: 16px;
             cursor: pointer;
-        }}
+        }
+        .conversation {
+            background-color: #f9f9f9;
+            padding: 10px;
+            border-left: 4px solid #007bff;
+            margin-bottom: 20px;
+            white-space: pre-wrap;
+        }
     </style>
 </head>
 <body>
     <h2>✏️ Edit AI Response</h2>
+
+    <h3>📜 Full Conversation</h3>
+    <div class="conversation">
+        {{ full_conversation }}
+    </div>
+
     <form method="post">
         <label for="edited_response"><b>💬 AI Suggested Response:</b></label><br>
         <textarea id="edited_response" name="edited_response" rows="4">{{ ai_response }}</textarea><br><br>
