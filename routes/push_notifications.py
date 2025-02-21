@@ -20,7 +20,7 @@ def send_push_notification(guest, message, ai_response, airbnb_link):
     thread_match = re.search(r"thread/(\d+)", airbnb_link)
     if thread_match:
         thread_id = thread_match.group(1)
-        airbnb_app_link = f"intent://messaging/thread/{thread_id}#Intent;scheme=airbnb;package=com.airbnb.android;end;"  # ✅ Corrected Intent Format
+        airbnb_app_link = f"https://www.airbnb.com/messaging/thread/{thread_id}"  # ✅ Official Airbnb Link
     else:
         airbnb_app_link = airbnb_link  # Fallback if extraction fails
 
