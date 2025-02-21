@@ -20,7 +20,8 @@ def send_push_notification(guest, message, ai_response, airbnb_link):
     thread_match = re.search(r"thread/(\d+)", airbnb_link)
     if thread_match:
         thread_id = thread_match.group(1)
-        airbnb_app_link = f"https://www.airbnb.com/messaging/thread/{thread_id}"  # ✅ Official Airbnb Link
+        # ✅ Restore the old URL format that worked before
+        airbnb_app_link = f"https://fr.airbnb.be/messaging/thread/{thread_id}?thread_type=home_booking&c=.pi80.pkaG9tZXNfbWVzc2FnaW5nL25ld19tZXNzYWdl&euid=819f8882-a06d-f4a6-da35-6b3b6f87be81"
     else:
         airbnb_app_link = airbnb_link  # Fallback if extraction fails
 
@@ -29,12 +30,12 @@ def send_push_notification(guest, message, ai_response, airbnb_link):
 
     push_data = {
         "type": "note",
-        "title": f"New Airbnb Message from {guest}!",
+        "title": f"📩 New Airbnb Message from {guest}!",
         "body": (
-            f"📩 Message: {message}\n"
-            f"🤖 AI Response: {ai_response}\n\n"
-            f"✅ Approve & Send: {approve_url}\n"
-            f"📝 Edit & Send: {edit_url}"
+            f"💬 **Message:** {message}\n"
+            f"🤖 **AI Suggested Reply:** {ai_response}\n\n"
+            f"✅ **Approve & Send:**\n{approve_url}\n\n"
+            f"📝 **Edit & Send:**\n{edit_url}"
         )
     }
 
