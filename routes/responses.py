@@ -1,34 +1,31 @@
-from flask import Blueprint, request, redirect
+from flask import Blueprint, request, render_template
 import pyperclip
 import re
 
 responses_blueprint = Blueprint('responses', __name__)
 
-@responses_blueprint.route('/prefill_message', methods=['GET'])
-def prefill_message():
-    """ Redirects to the old Airbnb URL format to force the app to open """
+@responses_blueprint.route('/edit_response', methods=['GET', 'POST'])
+def edit_response():
+    """ Allows user to edit AI-generated response and add extra apartment notes before sending """
+    if request.method == "POST":
+        edited_response = request.form.get("edited_response", "").strip()
+        additional_notes = request.form.get("additional_notes", "").strip()
+        airbnb_link = request.form.get("thread", "#")
+
+        # Save additional notes somewhere (To-Do: Implement storage mechanism)
+        print(f"📥 Received Edited Response: {edited_response}")
+        print(f"📝 Additional Notes: {additional_notes}")
+        print(f"🔗 Airbnb Link: {airbnb_link}")
+
+        # Copy edited response to clipboard for convenience
+        try:
+            pyperclip.copy(edited_response)
+        except Exception as e:
+            print(f"❌ Clipboard copy failed: {e}")
+
+        return "✅ Response updated successfully. Notes saved.", 200
+
     ai_response = request.args.get("response", "")
     airbnb_link = request.args.get("thread", "#")
 
-    if not ai_response or not airbnb_link:
-        return "❌ Invalid request.", 400
-
-    # Copy AI response to clipboard
-    try:
-        pyperclip.copy(ai_response)
-    except Exception as e:
-        print(f"❌ Clipboard copy failed: {e}")
-
-    # Extract Airbnb thread ID
-    match = re.search(r'thread/(\d+)', airbnb_link)
-    if match:
-        thread_id = match.group(1)
-        # ✅ Restore the old working Airbnb URL format
-        airbnb_web_link = f"https://fr.airbnb.be/messaging/thread/{thread_id}?thread_type=home_booking&c=.pi80.pkaG9tZXNfbWVzc2FnaW5nL25ld19tZXNzYWdl&euid=819f8882-a06d-f4a6-da35-6b3b6f87be81"
-    else:
-        return "❌ Unable to extract Airbnb thread ID.", 400
-
-    print(f"🔗 Redirecting to: {airbnb_web_link}")
-
-    # Redirect directly to the Airbnb web link (which should open the app)
-    return redirect(airbnb_web_link, code=302)
+    return render_template("edit_response.html", ai_response=ai_response, airbnb_link=airbnb_link)

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Edit Airbnb Response</title>
+    <style>
+        body {{
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            padding: 20px;
+        }}
+        textarea {{
+            width: 100%;
+            padding: 10px;
+            font-size: 14px;
+        }}
+        button {{
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }}
+    </style>
+</head>
+<body>
+    <h2>✏️ Edit AI Response</h2>
+    <form method="post">
+        <label for="edited_response"><b>💬 AI Suggested Response:</b></label><br>
+        <textarea id="edited_response" name="edited_response" rows="4">{{ ai_response }}</textarea><br><br>
+        
+        <label for="additional_notes"><b>📝 Additional Notes About Apartment:</b></label><br>
+        <textarea id="additional_notes" name="additional_notes" rows="4" placeholder="Add any extra details here..."></textarea><br><br>
+
+        <input type="hidden" name="thread" value="{{ airbnb_link }}">
+        
+        <button type="submit">✅ Save & Send</button>
+    </form>
+</body>
+</html>
