@@ -30,22 +30,26 @@ def gmail_trigger():
         print(f"💬 Message: {client_message}")
         print(f"⏳ Received At: {email_timestamp}")
 
-        # ✅ Store guest's question in conversation history
+        # ✅ Store guest's question only if it's not a duplicate
         if thread_id not in conversations:
             conversations[thread_id] = []
 
-        conversations[thread_id].append({
-            "role": "guest",
-            "sender": guest_name,
-            "message": client_message,
-            "timestamp": email_timestamp,  # ✅ Use correct email timestamp
-            "airbnb_link": airbnb_link
-        })
+        # Check if the same message already exists
+        existing_messages = [msg["message"] for msg in conversations[thread_id] if msg["role"] == "guest"]
+        if client_message not in existing_messages:
+            conversations[thread_id].append({
+                "role": "guest",
+                "sender": guest_name,
+                "message": client_message,
+                "timestamp": email_timestamp,
+                "airbnb_link": airbnb_link
+            })
 
         save_conversations(conversations)  # ✅ Save guest's message
 
         # ✅ Generate AI response
         ai_response = generate_response(client_message, listing_name)
+
 
         # ✅ Send Pushbullet notification (but don't save AI response yet)
         send_push_notification(guest_name, client_message, ai_response, airbnb_link)
