@@ -1,32 +1,42 @@
-let threadId = "123456789";  // Example thread ID
+// ✅ Automatically detect the thread ID from the URL
+let urlParams = new URLSearchParams(window.location.search);
+let threadId = urlParams.get("thread") || "123456789";  // Default to 123456789 if missing
+
 let lastEdit = "";  // Store last edit for undo functionality
 let airbnbLink = "";  // Store Airbnb thread link
 
-// Load the conversation and extract the Airbnb link
+// ✅ Load the correct conversation from the API
 function loadConversation() {
     fetch(`/conversation?thread=${threadId}`)
         .then(response => response.json())
         .then(data => {
             let historyDiv = document.getElementById("conversation-history");
-            let lastMessage = data.length > 0 ? data[data.length - 1] : null;
 
-            if (lastMessage) {
+            if (data.length > 0) {
                 historyDiv.innerHTML = data.map(msg =>
                     `<p><b>${msg.sender} (${msg.role}):</b> ${msg.message} 
                     <small>${new Date(msg.timestamp).toLocaleString()}</small></p>`).join('');
-
-                let aiResponseBox = document.getElementById("ai-response-box");
-                lastEdit = aiResponseBox.value = lastMessage.message; // Store last message for undo
-                
-                // ✅ Retrieve Airbnb link from backend when saving
-                airbnbLink = lastMessage.airbnb_link || "";
             } else {
                 historyDiv.innerHTML = "<p>No messages yet.</p>";
-                document.getElementById("ai-response-box").value = ""; // Clear AI response box if empty
+            }
+
+            // ✅ Ensure the last AI response is preloaded in the edit box
+            let aiResponseBox = document.getElementById("ai-response-box");
+            let lastMessage = data.length > 0 ? data[data.length - 1] : null;
+            if (lastMessage && lastMessage.role === "host") {
+                aiResponseBox.value = lastMessage.message;
+            } else {
+                aiResponseBox.value = "";
             }
         })
         .catch(error => console.error("Error loading conversation:", error));
 }
+
+// ✅ Force reload on every page visit to ensure the latest data is loaded
+window.onload = function () {
+    loadConversation();
+};
+
 
 // ✅ Save the edited AI response and redirect to Airbnb
 function saveEditedResponse() {
