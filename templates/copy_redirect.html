@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redirecting...</title>
+    <style>
+        body {
+            text-align: center;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+    </style>
+</head>
+<body>
+
+    <script>
+        function copyToClipboard(text) {
+            if (navigator.clipboard && window.isSecureContext) {
+                // Use Clipboard API if available and secure
+                return navigator.clipboard.writeText(text);
+            } else {
+                // Fallback for older browsers or insecure contexts
+                let tempInput = document.createElement("textarea");
+                document.body.appendChild(tempInput);
+                tempInput.value = text;
+                tempInput.select();
+                document.execCommand("copy");
+                document.body.removeChild(tempInput);
+                return Promise.resolve();
+            }
+        }
+
+        window.onload = function() {
+            let aiResponse = `{{ ai_response|safe }}`.trim();
+            copyToClipboard(aiResponse)
+                .then(() => {
+                    console.log("✅ Copied to clipboard:", aiResponse);
+                    setTimeout(() => {
+                        console.log("🔀 Redirecting to Airbnb:", "{{ airbnb_link }}");
+                        window.location.href = "{{ airbnb_link }}";
+                    }, 500); // Delay to ensure the copy is complete
+                })
+                .catch((err) => {
+                    console.error("❌ Failed to copy to clipboard:", err);
+                    // Redirect even if the copy fails
+                    window.location.href = "{{ airbnb_link }}";
+                });
+        };
+    </script>
+
+</body>
+</html>

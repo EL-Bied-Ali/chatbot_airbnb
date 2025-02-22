@@ -61,17 +61,26 @@ def approve_response():
     if thread_id not in conversations:
         conversations[thread_id] = []
 
-    new_message = {
+    # ✅ Check if a "host" response already exists for this guest message
+    existing_host_response = any(
+        msg for msg in conversations[thread_id] if msg["role"] == "host"
+    )
+
+    if existing_host_response:
+        print(f"🚫 AI response already approved, skipping save for thread {thread_id}.")
+        return jsonify({"error": "AI response is already approved and cannot be overwritten."}), 403  # Forbidden
+
+    # ✅ Store the approved response
+    conversations[thread_id].append({
         "role": "host",
         "sender": "AI Approved Response",
         "message": approved_message,
-        "timestamp": datetime.utcnow().isoformat(),
-    }
+        "timestamp": datetime.utcnow().isoformat()
+    })
 
-    conversations[thread_id].append(new_message)
     save_conversations(conversations)
-
-    return jsonify({"status": "AI response approved and saved"})
+    print(f"✅ AI Response Approved: {approved_message}")
+    return jsonify({"status": "AI response approved and saved"}), 200
 
 @conversation_bp.route("/edit_response", methods=["GET"])
 def edit_response():
@@ -90,10 +99,12 @@ def save_edited_response():
 
     conversations = load_conversations()
     if thread_id in conversations:
-        # ✅ Check if a "host" AI response already exists
-        existing_ai_response = [msg for msg in conversations[thread_id] if msg["role"] == "host"]
+        # ✅ Check if a "host" AI response already exists for this thread
+        existing_host_response = any(
+            msg for msg in conversations[thread_id] if msg["role"] == "host"
+        )
 
-        if existing_ai_response:
+        if existing_host_response:
             print(f"🚫 AI response already approved, editing is blocked for thread {thread_id}.")
             return jsonify({"error": "AI response is already approved and cannot be edited again."}), 403  # Forbidden
 
@@ -110,34 +121,6 @@ def save_edited_response():
         return jsonify({"status": "Response approved and saved"}), 200
 
     return jsonify({"error": "Thread not found"}), 404
-
-    """Edit AI response and store it in conversation history"""
-    data = request.json
-    thread_id = data.get("thread_id")
-    new_message = data.get("message")
-
-    if not thread_id or not new_message:
-        return jsonify({"error": "Missing data"}), 400
-
-    conversations = load_conversations()
-    if thread_id in conversations:
-        # ✅ Remove previous "ai_generated" response if it exists
-        conversations[thread_id] = [msg for msg in conversations[thread_id] if msg["role"] != "ai_generated"]
-
-        # ✅ Store the edited response as "host" (approved)
-        conversations[thread_id].append({
-            "role": "host",
-            "sender": "AI Approved Response",
-            "message": new_message,
-            "timestamp": datetime.utcnow().isoformat()
-        })
-
-        save_conversations(conversations)
-        print(f"✅ AI Response Edited and Approved: {new_message}")
-        return jsonify({"status": "Response edited and approved"})
-
-    return jsonify({"error": "Thread not found"}), 404
-
 
 @conversation_bp.route("/extra_info", methods=["POST"])
 def add_extra_info():

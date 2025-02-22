@@ -8,16 +8,10 @@
             "airbnb_link": "https://fr.airbnb.be/messaging/thread/2055967410?thread_type=home_booking&c=.pi80.pkaG9tZXNfbWVzc2FnaW5nL25ld19tZXNzYWdl&euid=819f8882-a06d-f4a6-da35-6b3b6f87be81"
         },
         {
-            "role": "ai_generated",
-            "sender": "AI Pending Approval",
-            "message": "\"Hello! I'm doing well, thank you for asking. How can I assist you with your booking?\"",
-            "timestamp": "2025-02-22T20:27:14.123108"
-        },
-        {
             "role": "host",
             "sender": "AI Approved Response",
-            "message": "\"Hi there! I'm doing great, thank you for asking. How can I assist you today?\"",
-            "timestamp": "2025-02-22T21:29:22.780722"
+            "message": "Hello! I'm doing well, thank you for asking.",
+            "timestamp": "2025-02-22T22:45:06.712231"
         }
     ]
 }
