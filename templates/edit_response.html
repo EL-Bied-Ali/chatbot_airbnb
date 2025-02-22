@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit AI Response</title>
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
 </head>
 <body>
 
@@ -19,6 +18,9 @@
     <h3>Send Additional Apartment Info</h3>
     <textarea id="extra-info-box" placeholder="Enter extra details about your apartment..."></textarea>
     <button onclick="sendApartmentInfo()">Send</button>
+
+    <!-- ✅ Move script to bottom for better execution -->
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
 
 </body>
 </html>
