@@ -1,50 +1,24 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Edit Airbnb Response</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 40px;
-            padding: 20px;
-        }
-        textarea {
-            width: 100%;
-            padding: 10px;
-            font-size: 14px;
-        }
-        button {
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
-        }
-        .conversation {
-            background-color: #f9f9f9;
-            padding: 10px;
-            border-left: 4px solid #007bff;
-            margin-bottom: 20px;
-            white-space: pre-wrap;
-        }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit AI Response</title>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
 </head>
 <body>
-    <h2>✏️ Edit AI Response</h2>
 
-    <h3>📜 Full Conversation</h3>
-    <div class="conversation">
-        {{ full_conversation }}
-    </div>
+    <h2>Conversation History</h2>
+    <div id="conversation-history"></div>
 
-    <form method="post">
-        <label for="edited_response"><b>💬 AI Suggested Response:</b></label><br>
-        <textarea id="edited_response" name="edited_response" rows="4">{{ ai_response }}</textarea><br><br>
-        
-        <label for="additional_notes"><b>📝 Additional Notes About Apartment:</b></label><br>
-        <textarea id="additional_notes" name="additional_notes" rows="4" placeholder="Add any extra details here..."></textarea><br><br>
+    <h3>Edit AI Response</h3>
+    <textarea id="ai-response-box"></textarea>
+    <button onclick="saveEditedResponse()">Save</button>
+    <button onclick="undoEdit()">Undo Edit</button>
 
-        <input type="hidden" name="thread" value="{{ airbnb_link }}">
-        
-        <button type="submit">✅ Save & Send</button>
-    </form>
+    <h3>Send Additional Apartment Info</h3>
+    <textarea id="extra-info-box" placeholder="Enter extra details about your apartment..."></textarea>
+    <button onclick="sendApartmentInfo()">Send</button>
+
 </body>
 </html>

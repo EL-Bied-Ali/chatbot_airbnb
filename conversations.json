@@ -1,0 +1,35 @@
+{
+    "123456789": [
+        {
+            "role": "guest",
+            "sender": "John",
+            "message": "This is AI response!",
+            "timestamp": "2025-02-22T12:55:14.703360"
+        },
+        {
+            "role": "guest",
+            "sender": "John",
+            "message": "Hello!",
+            "timestamp": "2025-02-22T13:11:23.846403"
+        },
+        {
+            "role": "guest",
+            "sender": "John",
+            "message": "This is the AI response with an Airbnb link!",
+            "timestamp": "2025-02-22T13:12:47.698086"
+        },
+        {
+            "role": "guest",
+            "sender": "John",
+            "message": "This is the AI response with an Airbnb link!",
+            "timestamp": "2025-02-22T13:14:04.065998"
+        },
+        {
+            "role": "guest",
+            "sender": "John",
+            "message": "Hello! Here is your Airbnb link.",
+            "timestamp": "2025-02-22T13:21:19.696373",
+            "airbnb_link": "https://fr.airbnb.be/messaging/thread/123456789"
+        }
+    ]
+}
