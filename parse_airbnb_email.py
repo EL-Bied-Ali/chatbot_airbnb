@@ -6,6 +6,7 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 import os
+from datetime import datetime
 
 # 🔹 Gmail API scope (read-only)
 SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
@@ -30,7 +31,6 @@ def get_latest_airbnb_messages():
     creds = authenticate_gmail()
     service = build("gmail", "v1", credentials=creds)
 
-    # 🔍 Recherche des emails de express@airbnb.com
     query = 'from:express@airbnb.com'
     results = service.users().messages().list(userId="me", q=query, maxResults=1).execute()
     messages = results.get("messages", [])
@@ -44,8 +44,11 @@ def get_latest_airbnb_messages():
     for msg in messages:
         message = service.users().messages().get(userId="me", id=msg["id"]).execute()
         payload = message.get("payload", {})
+        email_timestamp = message.get("internalDate")  # ⏳ Extract exact timestamp from Gmail API
 
-        # Décodage du contenu de l'email
+        # Convert timestamp from milliseconds to readable format
+        email_timestamp = datetime.utcfromtimestamp(int(email_timestamp) / 1000).strftime('%Y-%m-%d %H:%M:%S UTC')
+
         msg_body = None
         if "parts" in payload:
             for part in payload["parts"]:
@@ -62,13 +65,13 @@ def get_latest_airbnb_messages():
                 print(f"❌ Erreur de décodage: {e}")
                 decoded_msg = ""
 
-            extracted_data = extract_airbnb_details(decoded_msg)
+            extracted_data = extract_airbnb_details(decoded_msg, email_timestamp)
             if extracted_data:
                 airbnb_messages.append(extracted_data)
 
     return airbnb_messages
 
-def extract_airbnb_details(email_html):
+def extract_airbnb_details(email_html, email_timestamp):
     """ Extract key information from an Airbnb email using BeautifulSoup """
     soup = BeautifulSoup(email_html, "html.parser")
     email_text = soup.get_text()
@@ -82,7 +85,7 @@ def extract_airbnb_details(email_html):
         prev_text = email_text[:guest_match.start()]
         last_name_match = re.findall(r"\b[A-Z][a-z]+\b", prev_text)
         if last_name_match:
-            guest_name = last_name_match[-1]  # Dernier mot trouvé
+            guest_name = last_name_match[-1]
 
     # 🔹 Extraction du message du client
     message = None
@@ -134,16 +137,15 @@ def extract_airbnb_details(email_html):
         else:
             airbnb_link = None  # Fallback if extraction fails
 
-
     return {
         "guest_name": guest_name,
         "listing_name": listing_name,
         "reservation_dates": reservation_dates,
         "message": message,
+        "message_timestamp": email_timestamp,  # ⏳ Store exact timestamp
         "airbnb_link": airbnb_link,  # 🔹 Correct Airbnb deep link
         "airbnb_thread_id": airbnb_thread_id  # 🔹 Thread ID for reference
     }
-
 
 if __name__ == "__main__":
     messages = get_latest_airbnb_messages()
@@ -152,6 +154,7 @@ if __name__ == "__main__":
         print(f"👤 Guest: {msg['guest_name']}")
         print(f"🏡 Listing: {msg['listing_name']}")
         print(f"📅 Dates: {msg['reservation_dates']}")
+        print(f"⏳ Sent At: {msg['message_timestamp']}")
         print(f"💬 Message: {msg['message']}")
         print(f"🔗 Lien vers la conversation Airbnb: {msg.get('airbnb_link', '❌ Aucun lien trouvé')}")
         print(f"🆔 ID de la discussion Airbnb: {msg.get('airbnb_thread_id', '❌ Aucun ID trouvé')}")
