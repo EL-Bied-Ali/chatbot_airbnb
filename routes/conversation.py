@@ -6,20 +6,20 @@ conversation_bp = Blueprint("conversation", __name__)
 
 @conversation_bp.route("/", methods=["GET"])
 def get_conversation():
-    """Retrieve conversation history sorted by timestamp."""
+    """Retrieve conversation history for a specific thread ID."""
     thread_id = request.args.get("thread")
     conversations = load_conversations()
-    return jsonify(sort_conversation(conversations.get(thread_id, [])))
+    return jsonify(sort_conversation(conversations.get(thread_id, []))) if thread_id in conversations else jsonify([])
 
 @conversation_bp.route("/add", methods=["POST"])
 def add_message():
-    """Add a new message to the conversation."""
+    """Add a new message to a specific thread's conversation."""
     data = request.json
     thread_id = data.get("thread_id")
     message = data.get("message")
     role = data.get("role", "guest")
     sender = data.get("sender", "Anonymous")
-    airbnb_link = data.get("airbnb_link", None)  # ✅ Ensure Airbnb link is retrieved
+    airbnb_link = data.get("airbnb_link", None)
 
     if not thread_id or not message:
         return jsonify({"error": "Missing data"}), 400
@@ -32,68 +32,55 @@ def add_message():
         "role": role,
         "sender": sender,
         "message": message,
-        "timestamp": datetime.utcnow().isoformat()
+        "timestamp": datetime.utcnow().isoformat(),
     }
 
-    if airbnb_link:  # ✅ Store the Airbnb link only if it exists
+    if airbnb_link:
         new_message["airbnb_link"] = airbnb_link
 
     conversations[thread_id].append(new_message)
 
-    # ✅ Keep only the last 100,000 messages
+    # Keep only the last 100,000 messages per thread
     if len(conversations[thread_id]) > 100000:
         conversations[thread_id] = conversations[thread_id][-100000:]
 
-    save_conversations(conversations)  # ✅ Save the updated conversation
+    save_conversations(conversations)
     return jsonify({"status": "Message added"})
 
-@conversation_bp.route("/delete", methods=["POST"])
-def delete_message():
-    """Delete a specific message by timestamp."""
+@conversation_bp.route("/approve", methods=["POST"])
+def approve_response():
+    """Save an approved AI response into the conversation history."""
     data = request.json
     thread_id = data.get("thread_id")
-    timestamp = data.get("timestamp")
+    approved_message = data.get("message")
 
-    if not thread_id or not timestamp:
+    if not thread_id or not approved_message:
         return jsonify({"error": "Missing data"}), 400
 
     conversations = load_conversations()
-    if thread_id in conversations:
-        updated_conversation = [msg for msg in conversations[thread_id] if msg["timestamp"] != timestamp]
+    if thread_id not in conversations:
+        conversations[thread_id] = []
 
-        if len(updated_conversation) < len(conversations[thread_id]):  # ✅ Message was found & deleted
-            conversations[thread_id] = updated_conversation
-            save_conversations(conversations)
-            return jsonify({"status": "Message deleted"})
-    
-    return jsonify({"error": "Message not found"}), 404
+    new_message = {
+        "role": "host",
+        "sender": "AI Approved Response",
+        "message": approved_message,
+        "timestamp": datetime.utcnow().isoformat(),
+    }
 
-@conversation_bp.route("/undo", methods=["POST"])
-def undo_last_edit():
-    """Undo the last message added."""
-    data = request.json
-    thread_id = data.get("thread_id")
+    conversations[thread_id].append(new_message)
+    save_conversations(conversations)
 
-    if not thread_id:
-        return jsonify({"error": "Missing thread ID"}), 400
+    return jsonify({"status": "AI response approved and saved"})
 
-    conversations = load_conversations()
-    if thread_id in conversations and conversations[thread_id]:
-        last_message = conversations[thread_id].pop()  # ✅ Remove last message
-        save_conversations(conversations)
-        return jsonify({"status": "Undo successful", "removed": last_message})
-    
-    return jsonify({"error": "No messages to undo"}), 400
-
-# ✅ Serve the edit response page
 @conversation_bp.route("/edit_response", methods=["GET"])
 def edit_response():
+    """Serve the edit response page."""
     return render_template("edit_response.html")
 
-# ✅ Save edited AI response and return the Airbnb link dynamically
 @conversation_bp.route("/edit_response/save", methods=["POST"])
 def save_edited_response():
-    """Edit AI response and retrieve Airbnb link dynamically from the latest message."""
+    """Edit AI response and store it in conversation history, retrieving the Airbnb link dynamically."""
     data = request.json
     thread_id = data.get("thread_id")
     new_message = data.get("message")
@@ -103,29 +90,28 @@ def save_edited_response():
 
     conversations = load_conversations()
     if thread_id in conversations and conversations[thread_id]:
-        last_message = conversations[thread_id][-1]  # ✅ Get the last message
-        last_message["message"] = new_message  # ✅ Update AI response
+        last_message = conversations[thread_id][-1]
+        last_message["message"] = new_message
 
-        # ✅ Retrieve the latest Airbnb link by checking all messages in the thread
+        # Retrieve the latest Airbnb link from the thread's history
         airbnb_link = None
-        for msg in reversed(conversations[thread_id]):  # Loop from newest to oldest
+        for msg in reversed(conversations[thread_id]):
             if "airbnb_link" in msg:
                 airbnb_link = msg["airbnb_link"]
-                break  # Stop when the first link is found
+                break
 
         save_conversations(conversations)
 
         return jsonify({
             "status": "Response edited",
-            "airbnb_link": airbnb_link  # ✅ Send link back to frontend
+            "airbnb_link": airbnb_link
         })
 
     return jsonify({"error": "Thread not found"}), 404
 
-
 @conversation_bp.route("/extra_info", methods=["POST"])
 def add_extra_info():
-    """Receive additional apartment details."""
+    """Receive and store additional apartment details in the conversation."""
     data = request.json
     thread_id = data.get("thread_id")
     extra_info = data.get("extra_info")
