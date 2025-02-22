@@ -24,9 +24,11 @@ def gmail_trigger():
         client_message = latest_message.get("message")
         listing_name = latest_message.get("listing_name")
         airbnb_link = latest_message.get("airbnb_link")
+        email_timestamp = latest_message.get("message_timestamp")  # ✅ Get correct timestamp
 
         print(f"\n📩 **New Airbnb Message from {guest_name}**")
         print(f"💬 Message: {client_message}")
+        print(f"⏳ Received At: {email_timestamp}")
 
         # ✅ Store guest's question in conversation history
         if thread_id not in conversations:
@@ -36,7 +38,7 @@ def gmail_trigger():
             "role": "guest",
             "sender": guest_name,
             "message": client_message,
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": email_timestamp,  # ✅ Use correct email timestamp
             "airbnb_link": airbnb_link
         })
 
