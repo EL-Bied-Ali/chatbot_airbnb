@@ -31,5 +31,14 @@
             "timestamp": "2025-02-22T13:21:19.696373",
             "airbnb_link": "https://fr.airbnb.be/messaging/thread/123456789"
         }
+    ],
+    "2055967410": [
+        {
+            "role": "guest",
+            "sender": "Youssef",
+            "message": "How are you ?",
+            "timestamp": "2025-02-22T14:24:56.942692",
+            "airbnb_link": "https://fr.airbnb.be/messaging/thread/2055967410?thread_type=home_booking&c=.pi80.pkaG9tZXNfbWVzc2FnaW5nL25ld19tZXNzYWdl&euid=819f8882-a06d-f4a6-da35-6b3b6f87be81"
+        }
     ]
 }
