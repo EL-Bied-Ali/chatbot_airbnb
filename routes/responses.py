@@ -32,8 +32,8 @@ def generate_ai_response():
 @responses_blueprint.route('/prefill_message', methods=['GET'])
 def prefill_message():
     """
-    Copies AI response, prevents duplicate approvals by checking that the latest message is from the guest,
-    and renders a page that copies the response to the clipboard before redirecting to Airbnb.
+    Copies AI response and renders a page that copies the response to the clipboard before redirecting to Airbnb.
+    If a host response is already approved (i.e. the latest message isn’t from a guest), returns an error.
     """
     ai_response = request.args.get("response", "").strip()
     airbnb_link = request.args.get("thread", "#")
@@ -69,20 +69,25 @@ def prefill_message():
         ai_response = generate_response(last_guest_message, "Bayside Luxe 2BR")
         print(f"🤖 Generated new AI response: {ai_response}")
 
-    # Prevent duplicate approval by checking if the latest message is still from the guest
+    # Check for duplicate host response: if the latest message is not from a guest,
+    # it means a host response has already been approved.
     thread_convo = conversations.get(thread_id, [])
     if thread_convo and thread_convo[-1]["role"] != "guest":
-        print(f"🚫 Latest message is already approved. Skipping duplicate host response.")
-    else:
-        conversations[thread_id].append({
-            "role": "host",
-            "sender": "AI Approved Response",
-            "message": ai_response,
-            "timestamp": datetime.utcnow().isoformat()
-        })
-        save_conversations(conversations)
-        print(f"✅ AI Response Approved and Saved for Message: {last_guest_message}")
+        error_message = "Error: The AI response has already been approved and sent."
+        print(f"🚫 {error_message}")
+        return error_message, 403
 
+    # Append the new host message and save
+    conversations[thread_id].append({
+        "role": "host",
+        "sender": "AI Approved Response",
+        "message": ai_response,
+        "timestamp": datetime.utcnow().isoformat()
+    })
+    save_conversations(conversations)
+    print(f"✅ AI Response Approved and Saved for Message: {last_guest_message}")
+
+    # Render the page that performs clipboard copying and redirection
     return render_template("copy_redirect.html", ai_response=ai_response, airbnb_link=airbnb_app_link)
 
 

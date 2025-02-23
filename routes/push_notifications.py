@@ -20,7 +20,7 @@ def send_push_notification(guest, message, ai_response, airbnb_link, test_mode=F
     encoded_ai_response = urllib.parse.quote(ai_response)
     encoded_airbnb_link = urllib.parse.quote(airbnb_link, safe=":/?=&")
 
-    # NOTE: Use the /prefill_message route from responses.py
+    # Use the /prefill_message route from responses.py for approval
     approve_url = f"https://airbnb-bot.onrender.com/prefill_message?response={encoded_ai_response}&thread={encoded_airbnb_link}"
     edit_url = f"https://airbnb-bot.onrender.com/edit_response?response={encoded_ai_response}&thread={encoded_airbnb_link}"
 
