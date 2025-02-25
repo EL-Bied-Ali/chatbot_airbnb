@@ -22,7 +22,7 @@ def start_gmail_watch():
     
     request_body = {
         "labelIds": ["INBOX"],
-        "topicName": "projects/airbnb-gmail-push/topics/gmail-notifications"
+        "topicName": "projects/airbnb-gmail-bot/topics/gmail-notifications"
     }
     
     response = service.users().watch(userId="me", body=request_body).execute()

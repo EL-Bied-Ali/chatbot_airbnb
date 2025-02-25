@@ -1,9 +1,14 @@
 from flask import Blueprint, request, jsonify
-from parse_airbnb_email import get_latest_airbnb_messages
-from utils.storage import load_conversations, save_conversations
 from datetime import datetime
 from routes.push_notifications import send_push_notification
 from test_ai_response import generate_response
+from parse_airbnb_email import get_latest_airbnb_messages
+from utils.storage import load_conversations, save_conversations
+from google_auth_oauthlib.flow import InstalledAppFlow
+
+import pickle
+
+import os
 
 gmail_blueprint = Blueprint("gmail", __name__)
 
@@ -14,6 +19,7 @@ def gmail_trigger():
 
     messages = get_latest_airbnb_messages()
     if not messages:
+        print("🚫 No new emails found.")
         return jsonify({"status": "No new emails found"}), 200
 
     conversations = load_conversations()
@@ -44,14 +50,61 @@ def gmail_trigger():
                 "timestamp": email_timestamp,
                 "airbnb_link": airbnb_link
             })
+            print(f"✅ Message from {guest_name} stored successfully.")
 
         save_conversations(conversations)  # ✅ Save guest's message
 
         # ✅ Generate AI response
         ai_response = generate_response(client_message, listing_name)
+        print(f"🤖 AI Response Generated: {ai_response}")
 
-
-        # ✅ Send Pushbullet notification (but don't save AI response yet)
+        # ✅ Send Pushbullet notification
         send_push_notification(guest_name, client_message, ai_response, airbnb_link)
+        print(f"📩 Pushbullet notification sent for {guest_name}.")
 
     return jsonify({"status": "Guest message stored, AI response generated & Pushbullet notification sent"}), 200
+
+def authorize_gmail():
+    """Starts the OAuth2 authorization flow for Gmail API."""
+    print("🔑 Opening Gmail OAuth authentication...")
+
+    SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
+    client_secret_path = os.path.join(os.path.dirname(__file__), "..", "credentials.json")
+
+    flow = InstalledAppFlow.from_client_secrets_file(client_secret_path, SCOPES, redirect_uri="http://localhost:8080/")
+    creds = flow.run_local_server(port=8080)  # ✅ Ensure this matches Google Console
+
+    with open("token.pickle", "wb") as token:
+        pickle.dump(creds, token)
+
+    print("✅ Gmail authorization complete.")
+    
+def start_gmail_watch():
+    """Starts the Gmail push notification watch."""
+    print("🔔 Starting Gmail Watch...")
+    
+    # ✅ Import and call the correct function from `start_watch.py`
+    from start_watch import start_gmail_watch as start_watch_function
+    start_watch_function()
+
+    print("✅ Gmail Watch started successfully.")
+
+
+
+    
+if __name__ == "__main__":
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--authorize", action="store_true", help="Authorize Gmail API")
+    parser.add_argument("--trigger-watch", action="store_true", help="Start Gmail Watch for push notifications")
+    args = parser.parse_args()
+
+    if args.authorize:
+        print("🔑 Starting Gmail authorization flow...")
+        authorize_gmail()  # ✅ Call the function here
+
+    if args.trigger_watch:
+        print("🔔 Triggering Gmail Watch...")
+        start_gmail_watch()  # ✅ Call the function here
+
