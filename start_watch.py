@@ -6,14 +6,21 @@ import os
 SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
 
 def authenticate_gmail():
+    """Authenticate using the stored token_web.json or credentials.json."""
     creds = None
-    if os.path.exists("token.json"):
-        creds = Credentials.from_authorized_user_file("token.json", SCOPES)
-    if not creds or not creds.valid:
-        flow = InstalledAppFlow.from_client_secrets_file("credentials.json", SCOPES)
-        creds = flow.run_local_server(port=0)
-        with open("token.json", "w") as token:
-            token.write(creds.to_json())
+
+    # Load token from environment variable
+    token_json = os.getenv("GMAIL_TOKEN_WEB")  # Changed variable name
+
+    if token_json:
+        creds = Credentials.from_authorized_user_info(json.loads(token_json), SCOPES)
+    else:
+        raise ValueError("❌ GMAIL_TOKEN_WEB environment variable is missing! Please upload your token.")
+
+    # Refresh token if needed
+    if creds and creds.expired and creds.refresh_token:
+        creds.refresh(Request())
+
     return creds
 
 def start_gmail_watch():
